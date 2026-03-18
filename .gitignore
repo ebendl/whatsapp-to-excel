@@ -1,3 +1,6 @@
+# OS files
+.DS_Store
+
 # Virtual Environment
 .venv/
 __pycache__/
