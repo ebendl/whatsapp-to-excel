@@ -1,0 +1,12 @@
+# Virtual Environment
+.venv/
+__pycache__/
+
+# WhatsApp exports (txt, zip)
+*.txt
+*.zip
+WhatsApp Chat - */
+WhatsApp Chat with */
+
+# Generated Excel files
+*.xlsx
