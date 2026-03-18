@@ -167,27 +167,39 @@ def create_xlsx(messages, output_path, sheet_name='Chat'):
     wb.save(output_path)
     print(f'Saved: {output_path} ({len(messages)} messages)')
 
+import sys
+import argparse
 
-BASE = os.path.dirname(os.path.abspath(__file__))
+def main():
+    parser = argparse.ArgumentParser(description='Convert WhatsApp chat directory to Excel.')
+    parser.add_argument('directory', help='Path to the unzipped WhatsApp chat directory')
+    args = parser.parse_args()
 
-chats = [
-    {
-        'txt': os.path.join(BASE, 'WhatsApp Chat - Graad 2_8', '_chat.txt'),
-        'out': os.path.join(BASE, 'WhatsApp Chat - Graad 2_8.xlsx'),
-        'name': 'Graad 2_8'
-    },
-    {
-        'txt': os.path.join(BASE, 'WhatsApp Chat with Gr 8k 2026', 'WhatsApp Chat with Gr 8k 2026.txt'),
-        'out': os.path.join(BASE, 'WhatsApp Chat - Gr 8k 2026.xlsx'),
-        'name': 'Gr 8k 2026'
-    },
-    {
-        'txt': os.path.join(BASE, 'WhatsApp Chat with Vodacom Xander', 'WhatsApp Chat with Vodacom Xander.txt'),
-        'out': os.path.join(BASE, 'WhatsApp Chat - Vodacom Xander.xlsx'),
-        'name': 'Vodacom Xander'
-    },
-]
+    dir_path = os.path.abspath(args.directory)
+    if not os.path.isdir(dir_path):
+        print(f"Error: {dir_path} is not a directory.")
+        sys.exit(1)
 
-for chat in chats:
-    messages = parse_chat(chat['txt'])
-    create_xlsx(messages, chat['out'], sheet_name=chat['name'])
+    # Find .txt file in the directory
+    txt_files = [f for f in os.listdir(dir_path) if f.endswith('.txt')]
+    if not txt_files:
+        print(f"Error: No .txt files found in {dir_path}")
+        sys.exit(1)
+
+    # Use the first .txt file found (usually _chat.txt)
+    txt_file = os.path.join(dir_path, txt_files[0])
+    
+    # Output name is the directory name
+    dir_name = os.path.basename(dir_path)
+    if not dir_name: # handles trailing slash
+        dir_name = os.path.basename(os.path.dirname(dir_path))
+    
+    output_xlsx = f"{dir_name}.xlsx"
+    output_path = os.path.join(os.path.dirname(dir_path), output_xlsx)
+
+    print(f"Parsing {txt_file}...")
+    messages = parse_chat(txt_file)
+    create_xlsx(messages, output_path, sheet_name=dir_name)
+
+if __name__ == '__main__':
+    main()

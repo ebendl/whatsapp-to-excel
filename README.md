@@ -32,12 +32,12 @@ A Python utility to convert exported WhatsApp chat files (.txt) into formatted E
 
 ## Usage
 
-1.  Export your WhatsApp chat as a `.txt` file (without media).
-2.  Update the `chats` list in `parse_whatsapp.py` with the paths to your text files and desired output locations.
-3.  Run the script:
+1.  Export your WhatsApp chat as a `.zip` file (without media) and unzip it into a folder.
+2.  Run the script by passing the path to the unzipped folder as an argument:
     ```bash
-    python3 parse_whatsapp.py
+    python3 parse_whatsapp.py "path/to/WhatsApp Chat - Folder Name"
     ```
+3.  The script will find the `.txt` file inside the folder and create a formatted Excel file named `Folder Name.xlsx` in the same base directory.
 
 ## License
 
