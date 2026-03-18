@@ -4,9 +4,9 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill
 from openpyxl.utils import get_column_letter
 
-# Regex for format 1: [2026-01-05, 09:35:42] Sender: Message
-RE_FMT1 = re.compile(r'^\u200e?\[(\d{4}-\d{2}-\d{2}, \d{2}:\d{2}:\d{2})\] ([^:]+): (.*)')
-RE_FMT1_SYS = re.compile(r'^\u200e?\[(\d{4}-\d{2}-\d{2}, \d{2}:\d{2}:\d{2})\] ([^:]+)$')
+# Regex for format 1: [2026-01-05, 09:35:42] Sender: Message (handles both / and - in dates)
+RE_FMT1 = re.compile(r'^\[(\d{4}[-/]\d{2}[-/]\d{2}, \d{2}:\d{2}:\d{2})\] ([^:]+): (.*)')
+RE_FMT1_SYS = re.compile(r'^\[(\d{4}[-/]\d{2}[-/]\d{2}, \d{2}:\d{2}:\d{2})\] ([^:]+)$')
 
 # Regex for format 2: 2026/02/20, 20:37 - Sender: Message
 RE_FMT2 = re.compile(r'^(\d{4}/\d{2}/\d{2}, \d{2}:\d{2}) - ([^:]+): (.*)')
@@ -43,8 +43,8 @@ def parse_chat(filepath):
 
     for raw_line in lines:
         line = raw_line.rstrip('\n')
-        # Strip zero-width non-breaking space and left-to-right mark
-        line = line.lstrip('\ufeff\u200e\u202a\u202c')
+        # Strip zero-width characters and LTR marks from the start of the line
+        line = re.sub(r'^[\u200e\u202a\ufeff\u200b\u200c\u200d\u202c]+', '', line)
 
         if is_new_message(line, fmt):
             if current:
