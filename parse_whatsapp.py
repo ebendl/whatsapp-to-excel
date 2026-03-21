@@ -1,5 +1,6 @@
 import re
 import os
+from datetime import datetime
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill
 from openpyxl.utils import get_column_letter
@@ -15,6 +16,20 @@ RE_FMT2_SYS = re.compile(r'^(\d{4}/\d{2}/\d{2}, \d{2}:\d{2}) - (.+)$')
 # Attachment patterns
 RE_ATTACH_FMT1 = re.compile(r'<attached: ([^>]+)>')
 RE_ATTACH_FMT2 = re.compile(r'(.+?) \(file attached\)')
+
+
+def format_datetime(dt_str, fmt):
+    try:
+        if fmt == 1:
+            # Handles both - and / in [YYYY-MM-DD, HH:MM:SS]
+            clean_dt = dt_str.replace('/', '-')
+            dt = datetime.strptime(clean_dt, '%Y-%m-%d, %H:%M:%S')
+        else:
+            # Handles YYYY/MM/DD, HH:MM
+            dt = datetime.strptime(dt_str, '%Y/%m/%d, %H:%M')
+        return dt.strftime('%Y-%m-%d %H:%M:%S')
+    except Exception:
+        return dt_str
 
 
 def detect_format(lines):
@@ -56,12 +71,12 @@ def parse_chat(filepath):
                     # system message
                     ms = RE_FMT1_SYS.match(line)
                     if ms:
-                        current = {'datetime': ms.group(1), 'sender': '', 'text': ms.group(2), 'attachments': []}
+                        current = {'datetime': format_datetime(ms.group(1), fmt), 'sender': '', 'text': ms.group(2), 'attachments': []}
                     else:
                         current = None
                     continue
                 current = {
-                    'datetime': m.group(1),
+                    'datetime': format_datetime(m.group(1), fmt),
                     'sender': m.group(2).strip(),
                     'text': m.group(3),
                     'attachments': []
@@ -71,12 +86,12 @@ def parse_chat(filepath):
                 if not m:
                     ms = RE_FMT2_SYS.match(line)
                     if ms:
-                        current = {'datetime': ms.group(1), 'sender': '', 'text': ms.group(2), 'attachments': []}
+                        current = {'datetime': format_datetime(ms.group(1), fmt), 'sender': '', 'text': ms.group(2), 'attachments': []}
                     else:
                         current = None
                     continue
                 current = {
-                    'datetime': m.group(1),
+                    'datetime': format_datetime(m.group(1), fmt),
                     'sender': m.group(2).strip(),
                     'text': m.group(3),
                     'attachments': []
