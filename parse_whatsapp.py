@@ -14,7 +14,7 @@ RE_FMT2_SYS = re.compile(r'^(\d{4}/\d{2}/\d{2}, \d{2}:\d{2}) - (.+)$')
 
 # Attachment patterns
 RE_ATTACH_FMT1 = re.compile(r'<attached: ([^>]+)>')
-RE_ATTACH_FMT2 = re.compile(r'^(.+) \(file attached\)$')
+RE_ATTACH_FMT2 = re.compile(r'(.+?) \(file attached\)')
 
 
 def detect_format(lines):
@@ -101,14 +101,30 @@ def parse_chat(filepath):
             # Clean attachment tags from text
             text = RE_ATTACH_FMT1.sub('', text).strip()
         else:
-            # Check if entire message is "filename (file attached)"
-            m = RE_ATTACH_FMT2.match(text.strip())
-            if m:
-                attachments.append(m.group(1))
-                text = ''
-            else:
-                # Could have mixed text + attachment on same line? Unlikely but handle
-                pass
+            # Check for "filename (file attached)" in the text
+            # We'll split by lines to handle each line potentially being an attachment
+            lines = text.split('\n')
+            new_lines = []
+            i = 0
+            while i < len(lines):
+                line = lines[i].strip()
+                m = RE_ATTACH_FMT2.search(line)
+                if m:
+                    filename = m.group(1).strip()
+                    attachments.append(filename)
+                    
+                    # Remove the "(file attached)" part and the filename from this line
+                    line_without_attachment = line.replace(m.group(0), "").strip()
+                    if line_without_attachment:
+                        new_lines.append(line_without_attachment)
+                    
+                    # Check if next line is exactly the filename (common in document attachments)
+                    if i + 1 < len(lines) and lines[i+1].strip() == filename:
+                        i += 1 # skip next line
+                else:
+                    new_lines.append(lines[i])
+                i += 1
+            text = '\n'.join(new_lines).strip()
 
         msg['text'] = text
         msg['attachments'] = attachments
